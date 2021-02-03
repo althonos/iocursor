@@ -31,6 +31,14 @@ class build_ext(_build_ext):
     """A `build_ext` that disables optimizations if compiled in debug mode.
     """
 
+    user_options = _build_ext.user_options + [
+        ("coverage", "C", "compile extension with coverage support")
+    ]
+
+    def initialize_options(self):
+        self.coverage = False
+        _build_ext.initialize_options(self)
+
     def info(self, message):
         self.announce(message, level=2)
 
@@ -40,16 +48,21 @@ class build_ext(_build_ext):
     def build_extension(self, ext):
         # update compile flags if compiling in debug mode
         if self.debug:
+            self.info("adding C flags to compile without optimisations")
             if self.compiler.compiler_type in {"unix", "cygwin", "mingw32"}:
-                self.info("adding C flags to compile without optimisations")
                 ext.extra_compile_args.append("-O0")
-                self.info("adding C flags to compile with coverage support")
-                ext.extra_compile_args.append("-coverage")
             elif self.compiler.compiler_type == "msvc":
-                self.info("adding C flags to compile without optimisations")
                 ext.extra_compile_args.append("/Od")
             else:
                 self.warn("unknown C compiler, cannot add debug flags")
+        if self.coverage:
+            self.info("adding C flags to compile with coverage support")
+            if self.compiler.compiler_type in {"unix", "cygwin", "mingw32"}:
+                ext.extra_compile_args.append("--coverage")
+                ext.extra_link_args.append("--coverage")
+            else:
+                self.warn("unknown C compiler, cannot add coverage flags")
+
         # run like normal
         _build_ext.build_extension(self, ext)
 
