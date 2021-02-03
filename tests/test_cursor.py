@@ -16,7 +16,7 @@ class TestReadCursorMixin:
     def test_repr(self):
         buffer = self.buftype(b"abcd")
         cursor = Cursor(buffer, mode="rw")
-        self.assertEqual(repr(cursor), f"Cursor({buffer!r}, mode='rw')")
+        self.assertEqual(repr(cursor), "Cursor({!r}, mode='rw')".format(buffer))
 
         class custom_repr(self.buftype):
             def __repr__(self):
