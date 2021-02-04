@@ -90,7 +90,7 @@ PyDoc_STRVAR(
   "Buffered I/O implementation using an in-memory bytes buffer."
 );
 
-static int
+static inline int
 iocursor_cursor_Cursor___init___impl(cursor* self, PyObject* source, bool readonly)
 {
     int return_value = 0;
@@ -202,6 +202,25 @@ iocursor_cursor_Cursor_detach_impl(cursor* self)
 // --------------------------------------------------------------------------
 
 PyDoc_STRVAR(
+  iocursor_cursor_Cursor_fileno___doc__,
+  "fileno(self)\n"
+  "--\n"
+  "\n"
+  ""
+);
+
+static PyObject*
+iocursor_cursor_Cursor_fileno_impl(cursor* self)
+{
+    PyCursor_State* state = PyCursor_getstate();
+    if (state != NULL)
+        PyErr_SetString(state->unsupported_operation, "fileno");
+    return NULL;
+}
+
+// --------------------------------------------------------------------------
+
+PyDoc_STRVAR(
   iocursor_cursor_Cursor_flush___doc__,
   "flush(self)\n"
   "--\n"
@@ -266,7 +285,7 @@ PyDoc_STRVAR(
   ""
 );
 
-static PyObject*
+static inline PyObject*
 iocursor_cursor_Cursor_read_impl(cursor* self, Py_ssize_t size)
 {
     if (check_closed(self))
@@ -331,7 +350,7 @@ PyDoc_STRVAR(
   "Return the next line from the file, as a bytes object.\n"
 );
 
-static PyObject*
+static inline PyObject*
 iocursor_cursor_Cursor_readline_impl(cursor* self, Py_ssize_t size) {
     if (check_closed(self))
         return NULL;
@@ -379,7 +398,7 @@ PyDoc_STRVAR(
   ""
 );
 
-static PyObject*
+static inline PyObject*
 iocursor_cursor_Cursor_seek_impl(cursor* self, Py_ssize_t pos, int whence)
 {
     Py_ssize_t new_pos;
@@ -511,7 +530,7 @@ PyDoc_STRVAR(
   ""
 );
 
-static PyObject*
+static inline PyObject*
 iocursor_cursor_Cursor_write_impl(cursor* self, Py_buffer* bytes)
 {
     /* Check the cursor is still writable */
@@ -577,6 +596,7 @@ static struct PyMemberDef cursor_members[] = {
 static struct PyMethodDef cursor_methods[] = {
     {"close",    (PyCFunction)                          iocursor_cursor_Cursor_close_impl,       METH_NOARGS,                  iocursor_cursor_Cursor_close___doc__},
     {"detach",   (PyCFunction)                          iocursor_cursor_Cursor_detach_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_detach___doc__},
+    {"fileno",   (PyCFunction)                          iocursor_cursor_Cursor_fileno_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_fileno___doc__},
     {"flush",    (PyCFunction)                          iocursor_cursor_Cursor_flush_impl,       METH_NOARGS,                  iocursor_cursor_Cursor_flush___doc__},
     {"getvalue", (PyCFunction)                          iocursor_cursor_Cursor_getvalue_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_getvalue___doc__},
     {"isatty",   (PyCFunction)                          iocursor_cursor_Cursor_isatty_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_isatty___doc__},
