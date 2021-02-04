@@ -95,29 +95,6 @@ class MemoryTestMixin:
         self.assertRaises(TypeError, memio.write, "1234567890")
         # self.assertRaises(TypeError, memio.writelines, ["1234567890"])
 
-    # def test_writelines(self):
-    #     buf = self.buftype("1234567890")
-    #     memio = self.ioclass()
-    #
-    #     self.assertEqual(memio.writelines([buf] * 100), None)
-    #     self.assertEqual(memio.getvalue(), buf * 100)
-    #     memio.writelines([])
-    #     self.assertEqual(memio.getvalue(), buf * 100)
-    #     memio = self.ioclass()
-    #     self.assertRaises(TypeError, memio.writelines, [buf] + [1])
-    #     self.assertEqual(memio.getvalue(), buf)
-    #     self.assertRaises(TypeError, memio.writelines, None)
-    #     memio.close()
-    #     self.assertRaises(ValueError, memio.writelines, [])
-    #
-    # def test_writelines_error(self):
-    #     memio = self.ioclass()
-    #     def error_gen():
-    #         yield self.buftype('spam')
-    #         raise KeyboardInterrupt
-    #
-    #     self.assertRaises(KeyboardInterrupt, memio.writelines, error_gen())
-    #
     # def test_truncate(self):
     #     buf = self.buftype("1234567890")
     #     memio = self.ioclass(buf)
@@ -236,29 +213,29 @@ class MemoryTestMixin:
         memio.close()
         self.assertRaises(ValueError,  memio.readline)
 
-    # def test_readlines(self):
-    #     buf = self.buftype("1234567890\n")
-    #     memio = self.ioclass(buf * 10)
-    #
-    #     self.assertEqual(memio.readlines(), [buf] * 10)
-    #     memio.seek(5)
-    #     self.assertEqual(memio.readlines(), [buf[5:]] + [buf] * 9)
-    #     memio.seek(0)
-    #     self.assertEqual(memio.readlines(15), [buf] * 2)
-    #     memio.seek(0)
-    #     self.assertEqual(memio.readlines(-1), [buf] * 10)
-    #     memio.seek(0)
-    #     self.assertEqual(memio.readlines(0), [buf] * 10)
-    #     memio.seek(0)
-    #     self.assertEqual(type(memio.readlines()[0]), type(buf))
-    #     memio.seek(0)
-    #     self.assertEqual(memio.readlines(None), [buf] * 10)
-    #     self.assertRaises(TypeError, memio.readlines, '')
-    #     # Issue #24989: Buffer overread
-    #     memio.seek(len(buf) * 10 + 1)
-    #     self.assertEqual(memio.readlines(), [])
-    #     memio.close()
-    #     self.assertRaises(ValueError, memio.readlines)
+    def test_readlines(self):
+        buf = self.buftype("1234567890\n")
+        memio = self.ioclass(buf * 10)
+
+        self.assertEqual(memio.readlines(), [buf] * 10)
+        memio.seek(5)
+        self.assertEqual(memio.readlines(), [buf[5:]] + [buf] * 9)
+        memio.seek(0)
+        self.assertEqual(memio.readlines(15), [buf] * 2)
+        memio.seek(0)
+        self.assertEqual(memio.readlines(-1), [buf] * 10)
+        memio.seek(0)
+        self.assertEqual(memio.readlines(0), [buf] * 10)
+        memio.seek(0)
+        self.assertEqual(type(memio.readlines()[0]), bytes)
+        memio.seek(0)
+        # self.assertEqual(memio.readlines(None), [buf] * 10)
+        self.assertRaises(TypeError, memio.readlines, '')
+        # Issue #24989: Buffer overread
+        memio.seek(len(buf) * 10 + 1)
+        self.assertEqual(memio.readlines(), [])
+        memio.close()
+        self.assertRaises(ValueError, memio.readlines)
 
     def test_iterator(self):
         buf = self.buftype("1234567890\n")
@@ -457,6 +434,30 @@ class CursorBytearrayTest(MemoryTestMixin, MemorySeekTestMixin, unittest.TestCas
         # memio = self.ioclass(b"")
         # self.write_ops(memio, self.buftype)
         # self.assertEqual(memio.getvalue(), buf)
+
+    def test_writelines(self):
+        buf = self.buftype("1234567890")
+        memio = self.ioclass(bytearray(10 * 100))
+
+        self.assertEqual(memio.writelines([buf] * 100), None)
+        self.assertEqual(memio.getvalue(), buf * 100)
+        memio.writelines([])
+        self.assertEqual(memio.getvalue(), buf * 100)
+
+        memio = self.ioclass(bytearray(10))
+        self.assertRaises(TypeError, memio.writelines, [buf] + [1])
+        self.assertEqual(memio.getvalue(), buf)
+        self.assertRaises(TypeError, memio.writelines, None)
+        memio.close()
+        self.assertRaises(ValueError, memio.writelines, [])
+
+    def test_writelines_error(self):
+        memio = self.ioclass(bytearray(10))
+        def error_gen():
+            yield self.buftype('spam')
+            raise KeyboardInterrupt
+
+        self.assertRaises(KeyboardInterrupt, memio.writelines, error_gen())
 
 
 class CursorBytesTest(MemoryTestMixin, MemorySeekTestMixin, unittest.TestCase):

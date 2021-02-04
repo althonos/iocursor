@@ -391,6 +391,90 @@ iocursor_cursor_Cursor_readline(PyObject* self, PyObject *args, PyObject *kwargs
 // --------------------------------------------------------------------------
 
 PyDoc_STRVAR(
+  iocursor_cursor_Cursor_readlines___doc__,
+  "readlines(self, hint=-1)\n"
+  "--\n"
+  "\n"
+  "Return the next line from the file, as a bytes object.\n"
+);
+
+static inline PyObject*
+iocursor_cursor_Cursor_readlines_impl(cursor* self, Py_ssize_t hint) {
+
+    void*      start;
+    void*      end;
+    PyObject*  bytes;
+    PyObject*  lines;
+    Py_ssize_t length = 0;
+    Py_ssize_t total  = 0;
+    Py_ssize_t size   = (self->offset > self->buffer.len) ? 0 : self->buffer.len - self->offset;
+
+    if ((hint <= 0) || hint > size)
+        hint = size;
+
+    if (check_closed(self))
+        return NULL;
+
+    if ((lines = PyList_New(0)) == NULL)
+        return PyErr_NoMemory();
+
+    while (total < hint) {
+        start = &((char*) self->buffer.buf)[self->offset];
+        end   = memchr(start, '\n', size);
+
+        length = (end == NULL) ? size : end - start + 1;
+        if ((bytes = PyBytes_FromStringAndSize((char*) start, length)) == NULL) {
+            Py_DECREF(lines);
+            return PyErr_NoMemory();
+        } else {
+            PyList_Append(lines, bytes);
+            Py_DECREF(bytes);
+        }
+
+        self->offset += length;
+        size -= length;
+        total += length;
+    }
+
+
+
+    // if ((size < 0) || (size >= self->buffer.len - self->offset))
+    //     size = (self->offset > self->buffer.len) ? 0 : self->buffer.len - self->offset;
+    // if (size == 0)
+    //     return PyBytes_FromStringAndSize(NULL, 0);
+    //
+    // void* start = (void*) &((char*) self->buffer.buf)[self->offset];
+    // void* end   = memchr(start, '\n', size);
+    //
+    // Py_ssize_t length = (end == NULL) ? size : end - start + 1;
+    // PyObject* bytes = PyBytes_FromStringAndSize((char*) start, length);
+    // if (bytes == NULL)
+    //     return PyErr_NoMemory();
+    //
+    // self->offset += length;
+    return lines;
+}
+
+static PyObject*
+iocursor_cursor_Cursor_readlines(PyObject* self, PyObject *args, PyObject *kwargs) {
+    assert(Py_TYPE(self) == PyCursor_Type);
+
+    PyObject* return_value = NULL;
+    cursor* crs            = (cursor*) self;
+    Py_ssize_t hint        = -1;
+
+    static char* keywords[] = {"hint", NULL};
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|n", keywords, &hint)) {
+        return_value = iocursor_cursor_Cursor_readlines_impl(crs, hint);
+    }
+
+    return return_value;
+}
+
+
+// --------------------------------------------------------------------------
+
+PyDoc_STRVAR(
   iocursor_cursor_Cursor_seek___doc__,
   "seek(self, pos, whence=0)\n"
   "--\n"
@@ -575,6 +659,94 @@ iocursor_cursor_Cursor_write(PyObject *self, PyObject *args, PyObject *kwargs)
     return return_value;
 }
 
+
+// --------------------------------------------------------------------------
+
+PyDoc_STRVAR(
+  iocursor_cursor_Cursor_writelines___doc__,
+  "writelines(self, lines, /)\n"
+  "--\n"
+  "\n"
+  ""
+);
+
+static int
+iter(PyObject* obj, PyObject** it)
+{
+    PyObject* tmp = PyObject_GetIter(obj);
+    if (tmp == NULL)
+        return 0;
+
+    *it = tmp;
+    return 1;
+}
+
+static inline PyObject*
+iocursor_cursor_Cursor_writelines_impl(cursor* self, PyObject* it)
+{
+    PyObject* item;
+    Py_buffer line;
+
+    /* Check the cursor is still writable */
+    if (check_closed(self))
+        return NULL;
+    if (check_writable(self))
+        return NULL;
+
+    while ((item = PyIter_Next(it))) {
+        /* Extract the item to a buffer */
+        if (PyObject_GetBuffer(item, &line, PyBUF_SIMPLE) < 0) {
+            Py_DECREF(item);
+            return NULL;
+        }
+
+        /* Check we can write the entirety of the line to the buffer */
+        if ((self->offset >= self->buffer.len) || (line.len > self->buffer.len - self->offset)) {
+            PyErr_Format(
+                PyExc_BufferError,
+                "cannot write %zd bytes to buffer of size %zd at position %zd",
+                line.len,
+                self->buffer.len,
+                self->offset
+            );
+            PyBuffer_Release(&line);
+            Py_DECREF(item);
+            return NULL;
+        }
+
+        /* Write the line to the buffer */
+        memcpy(&((char*) self->buffer.buf)[self->offset], line.buf, line.len);
+        self->offset += line.len;
+
+        /* release buffer and reference when done */
+        PyBuffer_Release(&line);
+        Py_DECREF(item);
+    }
+
+    if (PyErr_Occurred())
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+
+static PyObject*
+iocursor_cursor_Cursor_writelines(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    assert(Py_TYPE(self) == PyCursor_Type);
+
+    PyObject* it;
+    PyObject* return_value = NULL;
+    cursor*   crs          = (cursor*) self;
+
+    static char* keywords[] = {"b", NULL};
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O&", keywords, &iter, &it)) {
+        return_value = iocursor_cursor_Cursor_writelines_impl(crs, it);
+        Py_DECREF(it);
+    }
+
+    return return_value;
+}
+
 // --------------------------------------------------------------------------
 
 static PyObject*
@@ -594,20 +766,23 @@ static struct PyMemberDef cursor_members[] = {
 };
 
 static struct PyMethodDef cursor_methods[] = {
-    {"close",    (PyCFunction)                          iocursor_cursor_Cursor_close_impl,       METH_NOARGS,                  iocursor_cursor_Cursor_close___doc__},
-    {"detach",   (PyCFunction)                          iocursor_cursor_Cursor_detach_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_detach___doc__},
-    {"fileno",   (PyCFunction)                          iocursor_cursor_Cursor_fileno_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_fileno___doc__},
-    {"flush",    (PyCFunction)                          iocursor_cursor_Cursor_flush_impl,       METH_NOARGS,                  iocursor_cursor_Cursor_flush___doc__},
-    {"getvalue", (PyCFunction)                          iocursor_cursor_Cursor_getvalue_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_getvalue___doc__},
-    {"isatty",   (PyCFunction)                          iocursor_cursor_Cursor_isatty_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_isatty___doc__},
-    {"read",     (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
-    {"readable", (PyCFunction)                          iocursor_cursor_Cursor_readable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_readable___doc__},
-    {"readline", (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readline,         METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readline___doc__},
-    {"seek",     (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_seek,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_seek___doc__},
-    {"seekable", (PyCFunction)                          iocursor_cursor_Cursor_seekable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_seekable___doc__},
-    {"tell",     (PyCFunction)                          iocursor_cursor_Cursor_tell_impl,        METH_NOARGS,                  iocursor_cursor_Cursor_tell___doc__},
-    {"writable", (PyCFunction)                          iocursor_cursor_Cursor_writable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_writable___doc__},
-    {"write",    (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_write,            METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_write___doc__},
+    {"close",      (PyCFunction)                          iocursor_cursor_Cursor_close_impl,       METH_NOARGS,                  iocursor_cursor_Cursor_close___doc__},
+    {"detach",     (PyCFunction)                          iocursor_cursor_Cursor_detach_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_detach___doc__},
+    {"fileno",     (PyCFunction)                          iocursor_cursor_Cursor_fileno_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_fileno___doc__},
+    {"flush",      (PyCFunction)                          iocursor_cursor_Cursor_flush_impl,       METH_NOARGS,                  iocursor_cursor_Cursor_flush___doc__},
+    {"getvalue",   (PyCFunction)                          iocursor_cursor_Cursor_getvalue_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_getvalue___doc__},
+    {"isatty",     (PyCFunction)                          iocursor_cursor_Cursor_isatty_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_isatty___doc__},
+    {"read",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
+    {"read1",      (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
+    {"readable",   (PyCFunction)                          iocursor_cursor_Cursor_readable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_readable___doc__},
+    {"readline",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readline,         METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readline___doc__},
+    {"readlines",  (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readlines,        METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readlines___doc__},
+    {"seek",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_seek,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_seek___doc__},
+    {"seekable",   (PyCFunction)                          iocursor_cursor_Cursor_seekable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_seekable___doc__},
+    {"tell",       (PyCFunction)                          iocursor_cursor_Cursor_tell_impl,        METH_NOARGS,                  iocursor_cursor_Cursor_tell___doc__},
+    {"writable",   (PyCFunction)                          iocursor_cursor_Cursor_writable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_writable___doc__},
+    {"write",      (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_write,            METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_write___doc__},
+    {"writelines", (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_writelines,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_writelines___doc__},
     {NULL, NULL}  /* sentinel */
 };
 
