@@ -33,131 +33,37 @@ check_writable(cursor *self)
     return false;
 }
 
-static int
-cursor_clear(cursor *self)
-{
-    Py_CLEAR(self->source);
-    return 0;
-}
-
-static void
-cursor_dealloc(cursor *self)
-{
-    if (!self->closed) {
-        self->closed = true;
-        PyBuffer_Release(&self->buffer);
-    }
-    PyObject_GC_UnTrack(self);
-    Py_CLEAR(self->source);
-    Py_TYPE(self)->tp_free(self);
-}
-
-static int
-cursor_traverse(cursor* self, visitproc visit, void* arg)
-{
-    Py_VISIT(self->source);
-    return 0;
-}
-
 // --------------------------------------------------------------------------
 
-static PyObject *
-iocursor_cursor_Cursor___new__(PyTypeObject* type, PyObject* args, PyObject* kwds)
+static bool
+_convert_iter(PyObject* obj, PyObject** it)
 {
-    cursor *self;
+    PyObject* tmp = PyObject_GetIter(obj);
+    if (tmp == NULL)
+        return false;
 
-    assert(type != NULL && type->tp_alloc != NULL);
-    self = (cursor*) type->tp_alloc(type, 0);
-    if (self == NULL)
-        return NULL;
-
-    self->buffer.obj = NULL;
-    self->readonly = false;
-    self->closed = false;
-    self->offset = 0;
-    self->source = NULL;
-
-    return (PyObject *)self;
+    *it = tmp;
+    return true;
 }
 
-// --------------------------------------------------------------------------
-
-PyDoc_STRVAR(
-  iocursor_cursor_Cursor___init____doc__,
-  "Cursor(buffer, mode=\"\")\n"
-  "--\n"
-  "\n"
-  "Buffered I/O implementation using an in-memory bytes buffer."
-);
-
-static inline int
-iocursor_cursor_Cursor___init___impl(cursor* self, PyObject* source, bool readonly)
+static bool
+_convert_optional_size(PyObject* obj, Py_ssize_t* s)
 {
-    int return_value = 0;
+    if (obj == Py_None)
+        return true;
 
-    /* Allow calling __init__ more than once, in that case make sure to
-       release any previous object reference */
-    self->offset = 0;
-    if (self->buffer.buf != NULL)
-        PyBuffer_Release(&self->buffer);
+    PyObject* n = PyNumber_Index(obj);
+    if (n == NULL)
+        return false;
 
-    /* Register the source object */
-    self->source = source;
-    Py_INCREF(source);
+    Py_ssize_t tmp = PyLong_AsSsize_t(n);
+    Py_DECREF(n);
 
-    /* Mark the cursor as 'open' */
-    self->closed = false;
-    self->readonly = false;
+    if (PyErr_Occurred())
+        return false;
 
-    /* Get a buffer for the source object */
-    if (!readonly) {
-        return_value = PyObject_GetBuffer(source, &self->buffer, PyBUF_SIMPLE | PyBUF_WRITABLE);
-        if (return_value < 0) {
-            PyErr_Clear();
-            readonly = true;
-        }
-    }
-
-    if (readonly) {
-        return_value = PyObject_GetBuffer(source, &self->buffer, PyBUF_SIMPLE);
-        self->readonly = true;
-    }
-
-    return return_value;
-}
-
-static int
-iocursor_cursor_Cursor___init__(PyObject *self, PyObject *args, PyObject *kwargs)
-{
-    int return_value = -1;
-    static char* keywords[] = {"buffer", "readonly", NULL};
-
-    PyObject* source   = NULL;
-    int       readonly = false;
-
-    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O|p", keywords, &source, &readonly)) {
-        return_value = iocursor_cursor_Cursor___init___impl(
-            (cursor*) self,
-            source,
-            (bool) readonly
-        );
-    }
-
-    return return_value;
-}
-
-// --------------------------------------------------------------------------
-
-static PyObject*
-iocursor_cursor_Cursor___repr___impl(PyObject* self)
-{
-    assert(Py_TYPE(self) == PyCursor_Type);
-
-    cursor* crs = (cursor*) self;
-    if (crs->readonly)
-        return PyUnicode_FromFormat("Cursor(\%R, readonly=True)", crs->source);
-    else
-        return PyUnicode_FromFormat("Cursor(\%R, readonly=False)", crs->source);
+    *s = tmp;
+    return true;
 }
 
 // --------------------------------------------------------------------------
@@ -315,7 +221,7 @@ iocursor_cursor_Cursor_read(PyObject *self, PyObject *args, PyObject *kwargs)
     Py_ssize_t size        = -1;
 
     static char* keywords[] = {"size", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|n", keywords, &size)) {
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|O&", keywords, &_convert_optional_size, &size)) {
         return_value = iocursor_cursor_Cursor_read_impl(crs, size);
     }
 
@@ -427,7 +333,7 @@ iocursor_cursor_Cursor_readline(PyObject* self, PyObject *args, PyObject *kwargs
     Py_ssize_t size        = -1;
 
     static char* keywords[] = {"size", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|n", keywords, &size)) {
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|O&", keywords, &_convert_optional_size, &size)) {
         return_value = iocursor_cursor_Cursor_readline_impl(crs, size);
     }
 
@@ -510,7 +416,7 @@ iocursor_cursor_Cursor_readlines(PyObject* self, PyObject *args, PyObject *kwarg
     Py_ssize_t hint        = -1;
 
     static char* keywords[] = {"hint", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|n", keywords, &hint)) {
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|O&", keywords, &_convert_optional_size, &hint)) {
         return_value = iocursor_cursor_Cursor_readlines_impl(crs, hint);
     }
 
@@ -660,12 +566,12 @@ iocursor_cursor_Cursor_truncate(PyObject *self, PyObject *args, PyObject *kwargs
 {
     assert(Py_TYPE(self) == PyCursor_Type);
 
-    Py_ssize_t size;
-    PyObject*  return_value = NULL;
+    PyObject*  return_value   = NULL;
     cursor*    crs            = (cursor*) self;
+    Py_ssize_t size           = crs->offset;
 
     static char* keywords[] = {"b", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|n", keywords, &size)) {
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|O&", keywords, &_convert_optional_size, &size)) {
         return_value = iocursor_cursor_Cursor_truncate_impl(crs, size);
     }
 
@@ -748,7 +654,6 @@ iocursor_cursor_Cursor_write(PyObject *self, PyObject *args, PyObject *kwargs)
     return return_value;
 }
 
-
 // --------------------------------------------------------------------------
 
 PyDoc_STRVAR(
@@ -758,17 +663,6 @@ PyDoc_STRVAR(
   "\n"
   ""
 );
-
-static int
-iter(PyObject* obj, PyObject** it)
-{
-    PyObject* tmp = PyObject_GetIter(obj);
-    if (tmp == NULL)
-        return 0;
-
-    *it = tmp;
-    return 1;
-}
 
 static inline PyObject*
 iocursor_cursor_Cursor_writelines_impl(cursor* self, PyObject* it)
@@ -828,9 +722,96 @@ iocursor_cursor_Cursor_writelines(PyObject *self, PyObject *args, PyObject *kwar
     cursor*   crs          = (cursor*) self;
 
     static char* keywords[] = {"b", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O&", keywords, &iter, &it)) {
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O&", keywords, &_convert_iter, &it)) {
         return_value = iocursor_cursor_Cursor_writelines_impl(crs, it);
         Py_DECREF(it);
+    }
+
+    return return_value;
+}
+
+// --------------------------------------------------------------------------
+
+static PyObject *
+iocursor_cursor_Cursor___new__(PyTypeObject* type, PyObject* args, PyObject* kwds)
+{
+    cursor *self;
+
+    assert(type != NULL && type->tp_alloc != NULL);
+    self = (cursor*) type->tp_alloc(type, 0);
+    if (self == NULL)
+        return NULL;
+
+    self->buffer.obj = NULL;
+    self->readonly = false;
+    self->closed = false;
+    self->offset = 0;
+    self->source = NULL;
+
+    return (PyObject *)self;
+}
+
+// --------------------------------------------------------------------------
+
+PyDoc_STRVAR(
+  iocursor_cursor_Cursor___init____doc__,
+  "Cursor(buffer, mode=\"\")\n"
+  "--\n"
+  "\n"
+  "Buffered I/O implementation using an in-memory bytes buffer."
+);
+
+static inline int
+iocursor_cursor_Cursor___init___impl(cursor* self, PyObject* source, bool readonly)
+{
+    int return_value = 0;
+
+    /* Allow calling __init__ more than once, in that case make sure to
+       release any previous object reference */
+    self->offset = 0;
+    if (self->buffer.buf != NULL)
+        PyBuffer_Release(&self->buffer);
+
+    /* Register the source object */
+    self->source = source;
+    Py_INCREF(source);
+
+    /* Mark the cursor as 'open' */
+    self->closed = false;
+    self->readonly = false;
+
+    /* Get a buffer for the source object */
+    if (!readonly) {
+        return_value = PyObject_GetBuffer(source, &self->buffer, PyBUF_SIMPLE | PyBUF_WRITABLE);
+        if (return_value < 0) {
+            PyErr_Clear();
+            readonly = true;
+        }
+    }
+
+    if (readonly) {
+        return_value = PyObject_GetBuffer(source, &self->buffer, PyBUF_SIMPLE);
+        self->readonly = true;
+    }
+
+    return return_value;
+}
+
+static int
+iocursor_cursor_Cursor___init__(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    int return_value = -1;
+    static char* keywords[] = {"buffer", "readonly", NULL};
+
+    PyObject* source   = NULL;
+    int       readonly = false;
+
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "O|p", keywords, &source, &readonly)) {
+        return_value = iocursor_cursor_Cursor___init___impl(
+            (cursor*) self,
+            source,
+            (bool) readonly
+        );
     }
 
     return return_value;
@@ -844,6 +825,48 @@ iocursor_cursor_Cursor___next__(cursor* self)
     if (self->offset >= self->buffer.len)
         return NULL;
     return iocursor_cursor_Cursor_readline_impl(self, -1);
+}
+
+// --------------------------------------------------------------------------
+
+static PyObject*
+iocursor_cursor_Cursor___repr___impl(PyObject* self)
+{
+    assert(Py_TYPE(self) == PyCursor_Type);
+
+    cursor* crs = (cursor*) self;
+    if (crs->readonly)
+        return PyUnicode_FromFormat("Cursor(\%R, readonly=True)", crs->source);
+    else
+        return PyUnicode_FromFormat("Cursor(\%R, readonly=False)", crs->source);
+}
+
+// --------------------------------------------------------------------------
+
+static int
+cursor_clear(cursor *self)
+{
+    Py_CLEAR(self->source);
+    return 0;
+}
+
+static void
+cursor_dealloc(cursor *self)
+{
+    if (!self->closed) {
+        self->closed = true;
+        PyBuffer_Release(&self->buffer);
+    }
+    PyObject_GC_UnTrack(self);
+    Py_CLEAR(self->source);
+    Py_TYPE(self)->tp_free(self);
+}
+
+static int
+cursor_traverse(cursor* self, visitproc visit, void* arg)
+{
+    Py_VISIT(self->source);
+    return 0;
 }
 
 // --------------------------------------------------------------------------

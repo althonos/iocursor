@@ -136,7 +136,6 @@ class MemoryTestMixin:
         self.assertEqual(memio.getvalue(), buf)
         self.assertRaises(TypeError, memio.__init__, [])
 
-    @unittest.expectedFailure
     def test_read(self):
         buf = self.buftype("1234567890")
         memio = self.ioclass(buf)
@@ -220,7 +219,6 @@ class MemoryTestMixin:
         memio.close()
         self.assertRaises(ValueError,  memio.readline)
 
-    @unittest.expectedFailure
     def test_readlines(self):
         buf = self.buftype("1234567890\n")
         memio = self.ioclass(buf * 10)
