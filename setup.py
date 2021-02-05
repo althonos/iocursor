@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import os
+import sys
 
 import setuptools
 from distutils.command.clean import clean as _clean
@@ -87,10 +88,16 @@ class clean(_clean):
 
 # --- C extension ------------------------------------------------------------
 
+if sys.implementation.name == "cpython":
+    defines = [("CPYTHON", 1)]
+else:
+    defines = []
+
 extensions = [
     setuptools.Extension(
         "iocursor.cursor",
         [os.path.join("iocursor", "cursor.c")],
+        define_macros=defines,
     )
 ]
 

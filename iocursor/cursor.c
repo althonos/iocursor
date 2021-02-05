@@ -25,9 +25,9 @@ static int
 check_writable(cursor *self)
 {
     if (self->readonly) {
-        PyCursor_State* state = PyCursor_getstate();
-        if (state != NULL)
-            PyErr_SetString(state->unsupported_operation, "not writable");
+        PyObject* err = PyCursor_getunsupportedoperation();
+        if (err != NULL)
+            PyErr_SetString(err, "not writable");
         return true;
     }
     return false;
@@ -99,9 +99,9 @@ PyDoc_STRVAR(
 static PyObject*
 iocursor_cursor_Cursor_detach_impl(cursor* self)
 {
-    PyCursor_State* state = PyCursor_getstate();
-    if (state != NULL)
-        PyErr_SetString(state->unsupported_operation, "detach");
+    PyObject* err = PyCursor_getunsupportedoperation();
+    if (err != NULL)
+        PyErr_SetString(err, "detach");
     return NULL;
 }
 
@@ -118,9 +118,9 @@ PyDoc_STRVAR(
 static PyObject*
 iocursor_cursor_Cursor_fileno_impl(cursor* self)
 {
-    PyCursor_State* state = PyCursor_getstate();
-    if (state != NULL)
-        PyErr_SetString(state->unsupported_operation, "fileno");
+    PyObject* err = PyCursor_getunsupportedoperation();
+    if (err != NULL)
+        PyErr_SetString(err, "fileno");
     return NULL;
 }
 
@@ -554,9 +554,9 @@ iocursor_cursor_Cursor_truncate_impl(cursor* self, Py_ssize_t size)
     if (check_closed(self))
         return NULL;
 
-    PyCursor_State* state = PyCursor_getstate();
-    if (state != NULL)
-        PyErr_SetString(state->unsupported_operation, "truncate");
+    PyObject* err = PyCursor_getunsupportedoperation();
+    if (err != NULL)
+        PyErr_SetString(err, "truncate");
 
     return NULL;
 }
@@ -1012,6 +1012,8 @@ fail:
 
 // --- cursor module state ---------------------------------------------------
 
+#ifdef CPYTHON
+
 static PyCursor_State*
 PyCursor_getstate(void)
 {
@@ -1025,3 +1027,26 @@ PyCursor_getstate(void)
     }
     return state;
 }
+
+static PyObject*
+PyCursor_getunsupportedoperation(void)
+{
+    PyCursor_State* state = PyCursor_getstate();
+    return (state == NULL) ? NULL : state->unsupported_operation;
+}
+
+#else
+
+static PyObject*
+PyCursor_getunsupportedoperation(void)
+{
+    PyObject* err = NULL;
+    PyObject* _io = PyImport_ImportModule("_io");
+
+    if (_io != NULL)
+        err = PyObject_GetAttrString(_io, "UnsupportedOperation");
+
+    return err;
+}
+
+#endif
