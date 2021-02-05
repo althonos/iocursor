@@ -343,6 +343,52 @@ iocursor_cursor_Cursor_readable_impl(cursor* self)
 // --------------------------------------------------------------------------
 
 PyDoc_STRVAR(
+  iocursor_cursor_Cursor_readinto___doc__,
+  "readinto(self, buffer)\n"
+  "--\n"
+  "\n"
+  ""
+);
+
+static inline PyObject*
+iocursor_cursor_Cursor_readinto_impl(cursor* self, Py_buffer* buffer)
+{
+    Py_ssize_t nbytes = buffer->len;
+
+    if (check_closed(self))
+        return NULL;
+
+    if (self->offset >= self->buffer.len)
+        nbytes = 0;
+    else if (nbytes > self->buffer.len - self->offset)
+        nbytes = self->buffer.len - self->offset;
+
+    memcpy(buffer->buf, &((char*) self->buffer.buf)[self->offset], nbytes);
+    self->offset += nbytes;
+    return PyLong_FromSsize_t(nbytes);
+}
+
+static PyObject*
+iocursor_cursor_Cursor_readinto(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    assert(Py_TYPE(self) == PyCursor_Type);
+
+    Py_buffer buffer;
+    PyObject* return_value = NULL;
+    cursor*   crs            = (cursor*) self;
+
+    static char* keywords[] = {"buffer", NULL};
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "w*", keywords, &buffer)) {
+        return_value = iocursor_cursor_Cursor_readinto_impl(crs, &buffer);
+        PyBuffer_Release(&buffer);
+    }
+
+    return return_value;
+}
+
+// --------------------------------------------------------------------------
+
+PyDoc_STRVAR(
   iocursor_cursor_Cursor_readline___doc__,
   "readline(self, size=-1)\n"
   "--\n"
@@ -623,21 +669,24 @@ iocursor_cursor_Cursor_write_impl(cursor* self, Py_buffer* bytes)
     if (check_writable(self))
         return NULL;
 
-    /* Check the buffer is large enough to hold the data */
-    if ((self->offset >= self->buffer.len) || (bytes->len > self->buffer.len - self->offset)) {
-        PyErr_Format(
-            PyExc_BufferError,
-            "cannot write %zd bytes to buffer of size %zd at position %zd",
-            bytes->len,
-            self->buffer.len,
-            self->offset
-        );
-        return NULL;
+    /* No-op if there are no bytes to write */
+    if (bytes->len > 0) {
+        /* Check the buffer is large enough to hold the data */
+        if ((self->offset >= self->buffer.len) || (bytes->len > self->buffer.len - self->offset)) {
+            PyErr_Format(
+                PyExc_BufferError,
+                "cannot write %zd bytes to buffer of size %zd at position %zd",
+                bytes->len,
+                self->buffer.len,
+                self->offset
+            );
+            return NULL;
+        }
+        /* Copy data from `bytes` to the buffer */
+        memcpy(&((char*) self->buffer.buf)[self->offset], bytes->buf, bytes->len);
+        self->offset += bytes->len;
     }
 
-    /* Copy data from `bytes` to the buffer */
-    memcpy(&((char*) self->buffer.buf)[self->offset], bytes->buf, bytes->len);
-    self->offset += bytes->len;
     return PyLong_FromSsize_t(bytes->len);
 }
 
@@ -775,6 +824,8 @@ static struct PyMethodDef cursor_methods[] = {
     {"read",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
     {"read1",      (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
     {"readable",   (PyCFunction)                          iocursor_cursor_Cursor_readable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_readable___doc__},
+    {"readinto",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readinto,         METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readinto___doc__},
+    {"readinto1",  (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readinto,         METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readinto___doc__},
     {"readline",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readline,         METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readline___doc__},
     {"readlines",  (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readlines,        METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readlines___doc__},
     {"seek",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_seek,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_seek___doc__},
