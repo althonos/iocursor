@@ -427,6 +427,7 @@ class MemoryTestMixin:
             memio.foo = 1
 
     @unittest.expectedFailure
+    @unittest.skipUnless(sys.implementation.name == "cpython", "segfaults on PyPI")
     def test_pickling(self):
         buf = self.buftype("1234567890")
         memio = self.ioclass(buf)

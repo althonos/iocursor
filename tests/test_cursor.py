@@ -166,6 +166,10 @@ class TestCursorBytesMemoryview(unittest.TestCase, TestReadCursorMixin):
     def make_buffer(b):
         return memoryview(bytes(b))
 
+    def test_repr_readonly(self):
+        if sys.implementation.name != "pypy":
+            super().test_repr_readonly()
+
 
 class TestCursorBytes(unittest.TestCase, TestReadCursorMixin):
 
