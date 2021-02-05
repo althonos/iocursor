@@ -12,6 +12,14 @@ from iocursor import Cursor
 
 class TestReadCursorMixin:
 
+    def test_context(self):
+        buffer = self.make_buffer(b"abcd")
+        with Cursor(buffer) as cursor:
+            self.assertEqual(cursor.read(), b"abcd")
+            self.assertFalse(cursor.closed)
+        self.assertTrue(cursor.closed)
+        self.assertRaises(ValueError, cursor.read)
+
     def test_interface(self):
         cursor = Cursor(self.make_buffer(b"abcd"))
         self.assertIsInstance(cursor, io.IOBase)

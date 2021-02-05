@@ -822,8 +822,66 @@ iocursor_cursor_Cursor___init__(PyObject *self, PyObject *args, PyObject *kwargs
 
 // --------------------------------------------------------------------------
 
+PyDoc_STRVAR(
+  iocursor_cursor_Cursor___enter_____doc__,
+  "__enter__(self)\n"
+  "--\n"
+  "\n"
+  ""
+);
+
 static PyObject*
-iocursor_cursor_Cursor___next__(cursor* self)
+iocursor_cursor_Cursor___enter___impl(cursor* self)
+{
+    Py_INCREF(self);
+    return (PyObject*) self;
+}
+
+// --------------------------------------------------------------------------
+
+PyDoc_STRVAR(
+  iocursor_cursor_Cursor___exit_____doc__,
+  "__enter__(self)\n"
+  "--\n"
+  "\n"
+  ""
+);
+
+static PyObject*
+iocursor_cursor_Cursor___exit___impl(cursor* self, PyObject* exc_type, PyObject* exc_value, PyObject* traceback)
+{
+    if (iocursor_cursor_Cursor_close_impl(self) == NULL)
+        return NULL;
+    Py_RETURN_FALSE;
+}
+
+static PyObject*
+iocursor_cursor_Cursor___exit__(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+
+    PyObject*    return_value = NULL;
+    static char* keywords[]   = {"exc_type", "exc_value", "traceback"};
+
+    PyObject* exc_type  = Py_None;
+    PyObject* exc_value = Py_None;
+    PyObject* traceback = Py_None;
+
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|OOO", keywords, &exc_type, &exc_value, &traceback)) {
+        return_value = iocursor_cursor_Cursor___exit___impl(
+            (cursor*) self,
+            exc_type,
+            exc_value,
+            traceback
+        );
+    }
+
+    return return_value;
+}
+
+// --------------------------------------------------------------------------
+
+static PyObject*
+iocursor_cursor_Cursor___next___impl(cursor* self)
 {
     if (self->offset >= self->buffer.len)
         return NULL;
@@ -877,26 +935,28 @@ static struct PyMemberDef cursor_members[] = {
 };
 
 static struct PyMethodDef cursor_methods[] = {
-    {"close",      (PyCFunction)                          iocursor_cursor_Cursor_close_impl,       METH_NOARGS,                  iocursor_cursor_Cursor_close___doc__},
-    {"detach",     (PyCFunction)                          iocursor_cursor_Cursor_detach_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_detach___doc__},
-    {"fileno",     (PyCFunction)                          iocursor_cursor_Cursor_fileno_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_fileno___doc__},
-    {"flush",      (PyCFunction)                          iocursor_cursor_Cursor_flush_impl,       METH_NOARGS,                  iocursor_cursor_Cursor_flush___doc__},
-    {"getvalue",   (PyCFunction)                          iocursor_cursor_Cursor_getvalue_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_getvalue___doc__},
-    {"isatty",     (PyCFunction)                          iocursor_cursor_Cursor_isatty_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_isatty___doc__},
-    {"read",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
-    {"read1",      (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
-    {"readable",   (PyCFunction)                          iocursor_cursor_Cursor_readable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_readable___doc__},
-    {"readinto",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readinto,         METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readinto___doc__},
-    {"readinto1",  (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readinto,         METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readinto___doc__},
-    {"readline",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readline,         METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readline___doc__},
-    {"readlines",  (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readlines,        METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readlines___doc__},
-    {"seek",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_seek,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_seek___doc__},
-    {"seekable",   (PyCFunction)                          iocursor_cursor_Cursor_seekable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_seekable___doc__},
-    {"tell",       (PyCFunction)                          iocursor_cursor_Cursor_tell_impl,        METH_NOARGS,                  iocursor_cursor_Cursor_tell___doc__},
-    {"truncate",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_truncate,         METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_truncate___doc__},
-    {"writable",   (PyCFunction)                          iocursor_cursor_Cursor_writable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_writable___doc__},
-    {"write",      (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_write,            METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_write___doc__},
-    {"writelines", (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_writelines,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_writelines___doc__},
+    {"__enter__",  (PyCFunction)                          iocursor_cursor_Cursor___enter___impl, METH_NOARGS,                  iocursor_cursor_Cursor___enter_____doc__},
+    {"__exit__",   (PyCFunction)                          iocursor_cursor_Cursor___exit__,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor___exit_____doc__},
+    {"close",      (PyCFunction)                          iocursor_cursor_Cursor_close_impl,     METH_NOARGS,                  iocursor_cursor_Cursor_close___doc__},
+    {"detach",     (PyCFunction)                          iocursor_cursor_Cursor_detach_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_detach___doc__},
+    {"fileno",     (PyCFunction)                          iocursor_cursor_Cursor_fileno_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_fileno___doc__},
+    {"flush",      (PyCFunction)                          iocursor_cursor_Cursor_flush_impl,     METH_NOARGS,                  iocursor_cursor_Cursor_flush___doc__},
+    {"getvalue",   (PyCFunction)                          iocursor_cursor_Cursor_getvalue_impl,  METH_NOARGS,                  iocursor_cursor_Cursor_getvalue___doc__},
+    {"isatty",     (PyCFunction)                          iocursor_cursor_Cursor_isatty_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_isatty___doc__},
+    {"read",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,           METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
+    {"read1",      (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,           METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
+    {"readable",   (PyCFunction)                          iocursor_cursor_Cursor_readable_impl,  METH_NOARGS,                  iocursor_cursor_Cursor_readable___doc__},
+    {"readinto",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readinto,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readinto___doc__},
+    {"readinto1",  (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readinto,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readinto___doc__},
+    {"readline",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readline,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readline___doc__},
+    {"readlines",  (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readlines,      METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readlines___doc__},
+    {"seek",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_seek,           METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_seek___doc__},
+    {"seekable",   (PyCFunction)                          iocursor_cursor_Cursor_seekable_impl,  METH_NOARGS,                  iocursor_cursor_Cursor_seekable___doc__},
+    {"tell",       (PyCFunction)                          iocursor_cursor_Cursor_tell_impl,      METH_NOARGS,                  iocursor_cursor_Cursor_tell___doc__},
+    {"truncate",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_truncate,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_truncate___doc__},
+    {"writable",   (PyCFunction)                          iocursor_cursor_Cursor_writable_impl,  METH_NOARGS,                  iocursor_cursor_Cursor_writable___doc__},
+    {"write",      (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_write,          METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_write___doc__},
+    {"writelines", (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_writelines,     METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_writelines___doc__},
     {NULL, NULL}  /* sentinel */
 };
 
@@ -911,7 +971,7 @@ PyTypeObject PyCursor_Type = {
     .tp_traverse  = (traverseproc) cursor_traverse,
     .tp_clear     = (inquiry) cursor_clear,
     .tp_iter      = PyObject_SelfIter,
-    .tp_iternext  = (iternextfunc) iocursor_cursor_Cursor___next__,
+    .tp_iternext  = (iternextfunc) iocursor_cursor_Cursor___next___impl,
     .tp_methods   = cursor_methods,
     .tp_members   = cursor_members,
     .tp_init      = iocursor_cursor_Cursor___init__,
