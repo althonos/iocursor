@@ -635,6 +635,46 @@ iocursor_cursor_Cursor_tell_impl(cursor* self)
 // --------------------------------------------------------------------------
 
 PyDoc_STRVAR(
+  iocursor_cursor_Cursor_truncate___doc__,
+  "truncate(self, size=None, /)\n"
+  "--\n"
+  "\n"
+  ""
+);
+
+static PyObject*
+iocursor_cursor_Cursor_truncate_impl(cursor* self, Py_ssize_t size)
+{
+    if (check_closed(self))
+        return NULL;
+
+    PyCursor_State* state = PyCursor_getstate();
+    if (state != NULL)
+        PyErr_SetString(state->unsupported_operation, "truncate");
+
+    return NULL;
+}
+
+static PyObject*
+iocursor_cursor_Cursor_truncate(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    assert(Py_TYPE(self) == PyCursor_Type);
+
+    Py_ssize_t size;
+    PyObject*  return_value = NULL;
+    cursor*    crs            = (cursor*) self;
+
+    static char* keywords[] = {"b", NULL};
+    if (PyArg_ParseTupleAndKeywords(args, kwargs, "|n", keywords, &size)) {
+        return_value = iocursor_cursor_Cursor_truncate_impl(crs, size);
+    }
+
+    return return_value;
+}
+
+// --------------------------------------------------------------------------
+
+PyDoc_STRVAR(
   iocursor_cursor_Cursor_writable___doc__,
   "writable(self)\n"
   "--\n"
@@ -831,6 +871,7 @@ static struct PyMethodDef cursor_methods[] = {
     {"seek",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_seek,             METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_seek___doc__},
     {"seekable",   (PyCFunction)                          iocursor_cursor_Cursor_seekable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_seekable___doc__},
     {"tell",       (PyCFunction)                          iocursor_cursor_Cursor_tell_impl,        METH_NOARGS,                  iocursor_cursor_Cursor_tell___doc__},
+    {"truncate",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_truncate,         METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_truncate___doc__},
     {"writable",   (PyCFunction)                          iocursor_cursor_Cursor_writable_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_writable___doc__},
     {"write",      (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_write,            METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_write___doc__},
     {"writelines", (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_writelines,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_writelines___doc__},
