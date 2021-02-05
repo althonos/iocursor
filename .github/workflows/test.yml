@@ -9,14 +9,28 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version:
-          - 3.5
-          - 3.6
-          - 3.7
-          - 3.8
-          - 3.9
-          - pypy-3.6
-          - pypy-3.7
+        include:
+        - python-version: 3.5
+          python-release: v3.5
+          python-impl: CPython
+        - python-version: 3.6
+          python-release: v3.6
+          python-impl: CPython
+        - python-version: 3.7
+          python-release: v3.7
+          python-impl: CPython
+        - python-version: 3.8
+          python-release: v3.8
+          python-impl: CPython
+        - python-version: 3.9
+          python-release: v3.9
+          python-impl: CPython
+        - python-version: pypy-3.6
+          python-release: v3.6
+          python-impl: PyPy
+        - python-version: pypy-3.7
+          python-release: v3.7
+          python-impl: PyPy
     steps:
     - name: Checkout code
       uses: actions/checkout@v1
@@ -32,7 +46,7 @@ jobs:
       run: python -m unittest discover -vv
     - uses: codecov/codecov-action@v1
       with:
-        flags: unittests
+        flags: ${{ matrix.python-impl }},${{ matrix.python-release }}
         name: test-python-${{ matrix.python-version }}
         fail_ci_if_error: true
         token: ${{ secrets.CODECOV_TOKEN }}
