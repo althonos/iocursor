@@ -22,9 +22,10 @@ class TestBaseInterface(object):
 
         def _test(self):
             nonlocal name
-            self.assertTrue(hasattr(Cursor, name), f"Cursor class is missing {name!r} attribute")
+            msg = "Cursor class is missing {!r} attribute"
+            self.assertTrue(hasattr(Cursor, name), msg.format(name))
 
-        setattr(cls, f"test_hasattr_{name}", _test)
+        setattr(cls, "test_hasattr_{}".format(name), _test)
 
 
 class TestIOBaseInterface(unittest.TestCase, TestBaseInterface):
