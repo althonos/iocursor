@@ -2,6 +2,8 @@
 
 import array
 import io
+import os
+import sys
 import unittest
 
 # import numpy
@@ -15,10 +17,10 @@ class TestReadCursorMixin:
         self.assertIsInstance(cursor, io.IOBase)
         self.assertIsInstance(cursor, io.BufferedIOBase)
 
-    def test_repr(self):
+    def test_repr_readonly(self):
         buffer = self.make_buffer(b"abcd")
         cursor = Cursor(buffer, readonly=True)
-        self.assertEqual(repr(cursor), "Cursor({!r}, readonly=True)".format(buffer))
+        self.assertEqual(repr(cursor), "Cursor({!r})".format(buffer))
 
     def test_read(self):
         cursor = Cursor(self.make_buffer(b"abcdefghijkl"))
@@ -48,7 +50,7 @@ class TestReadCursorMixin:
     def test_flags(self):
         buf = self.make_buffer(b"abc")
         cursor = Cursor(buf)
-        self.assertEqual(cursor.writable(), not memoryview(buf).readonly)
+        self.assertEqual(cursor.writable(), False)
         self.assertEqual(cursor.readable(), True)
         self.assertEqual(cursor.seekable(), True)
         self.assertEqual(cursor.isatty(), False)
@@ -65,7 +67,7 @@ class TestReadCursorMixin:
     def test_readonly(self):
         buffer = self.make_buffer(b"abc")
         cursor = Cursor(buffer, readonly=True)
-        self.assertTrue(cursor.readonly)
+        self.assertFalse(cursor.writable())
         self.assertRaises(io.UnsupportedOperation, cursor.write, b"blah\n")
         self.assertRaises(io.UnsupportedOperation, cursor.writelines, [b"blah\n"])
 
@@ -75,12 +77,46 @@ class TestReadCursorMixin:
         self.assertIs(cursor.getvalue(), buffer)
         self.assertIsInstance(cursor.getvalue(), type(buffer))
 
+    def test_seek_overflow(self):
+        buffer = self.make_buffer(b"abcd")
+        cursor = Cursor(buffer, readonly=True)
+        self.assertEqual(cursor.seek(2), 2)
+        self.assertRaises(OverflowError, cursor.seek, sys.maxsize - 1, whence=os.SEEK_CUR)
+        self.assertRaises(OverflowError, cursor.seek, sys.maxsize - 1, whence=os.SEEK_END)
 
-class TestWriteCursorMixin:
+
+class TestWriteCursorMixin(TestReadCursorMixin):
+
+    def test_flags(self):
+        buf = self.make_buffer(b"abc")
+        cursor = Cursor(buf)
+        self.assertEqual(cursor.writable(), True)
+        self.assertEqual(cursor.readable(), True)
+        self.assertEqual(cursor.seekable(), True)
+        self.assertEqual(cursor.isatty(), False)
+        self.assertEqual(cursor.closed, False)
+
+        buf = self.make_buffer(b"abc")
+        cursor = Cursor(buf, readonly=True)
+        self.assertEqual(cursor.writable(), False)
+        self.assertEqual(cursor.readable(), True)
+        self.assertEqual(cursor.seekable(), True)
+        self.assertEqual(cursor.isatty(), False)
+        self.assertEqual(cursor.closed, False)
+
+    def test_repr_readonly(self):
+        buffer = self.make_buffer(b"abcd")
+        cursor = Cursor(buffer, readonly=True)
+        self.assertEqual(repr(cursor), "Cursor({!r}, readonly=True)".format(buffer))
+
+    def test_repr_write(self):
+        buffer = self.make_buffer(b"abcd")
+        cursor = Cursor(buffer)
+        self.assertEqual(repr(cursor), "Cursor({!r})".format(buffer))
 
     def test_write(self):
         buffer = self.make_buffer(bytearray(256))
-        cursor = Cursor(buffer, readonly=False)
+        cursor = Cursor(buffer)
 
         self.assertEqual(cursor.write(b"blah."), 5)
         self.assertEqual(cursor.seek(0), 0)
@@ -93,13 +129,35 @@ class TestWriteCursorMixin:
         self.assertEqual(cursor.write(b" world\n\n\n"), 9)
         self.assertEqual(cursor.seek(0), 0)
         self.assertEqual(cursor.write(b"h"), 1)
-        # NOTE: `truncate` is not supported
-        # self.assertEqual(cursor.truncate(12), 12)
+        self.assertRaises(io.UnsupportedOperation, cursor.truncate, 12)
         self.assertEqual(cursor.tell(), 1)
 
         value = cursor.getvalue()
         self.assertIs(value, buffer)
         self.assertEqual(value[:12], self.make_buffer(b"hello world\n"))
+
+    def test_write_overflow(self):
+        buffer = self.make_buffer(bytearray(10))
+        cursor = Cursor(buffer)
+
+        self.assertEqual(cursor.write(b"0123456789"), 10)
+        self.assertEqual(cursor.write(b""), 0)
+        self.assertRaises(BufferError, cursor.write, b"abc")
+        cursor.seek(-2, whence=os.SEEK_END)
+        self.assertRaises(BufferError, cursor.write, b"abc")
+        cursor.seek(-3, whence=os.SEEK_END)
+        self.assertEqual(cursor.write(b"abc"), 3)
+        self.assertEqual(bytes(buffer), b"0123456abc")
+
+    def test_writelines_overflow(self):
+        buffer = self.make_buffer(bytearray(8))
+        cursor = Cursor(buffer)
+
+        cursor.writelines([b"abc\n", b"def\n"])
+        self.assertEqual(bytes(buffer), b"abc\ndef\n")
+        self.assertEqual(cursor.seek(0), 0)
+        self.assertRaises(BufferError, cursor.writelines, [b"123\n", b"456\n", b"789\n"])
+        self.assertEqual(bytes(buffer), b"123\n456\n")
 
 
 class TestCursorBytesMemoryview(unittest.TestCase, TestReadCursorMixin):
@@ -116,14 +174,14 @@ class TestCursorBytes(unittest.TestCase, TestReadCursorMixin):
         return bytes(b)
 
 
-class TestCursorBytearray(unittest.TestCase, TestReadCursorMixin, TestWriteCursorMixin):
+class TestCursorBytearray(unittest.TestCase, TestWriteCursorMixin):
 
     @staticmethod
     def make_buffer(b):
         return bytearray(b)
 
 
-class TestCursorArray(unittest.TestCase, TestReadCursorMixin, TestWriteCursorMixin):
+class TestCursorArray(unittest.TestCase, TestWriteCursorMixin):
 
     @staticmethod
     def make_buffer(b):

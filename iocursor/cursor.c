@@ -593,7 +593,7 @@ iocursor_cursor_Cursor_writable_impl(cursor* self)
 {
     if (check_closed(self))
         return NULL;
-    return PyBool_FromLong(!self->readonly);
+    return PyBool_FromLong(!(self->readonly || self->buffer.readonly));
 }
 
 // --------------------------------------------------------------------------
@@ -771,6 +771,8 @@ iocursor_cursor_Cursor___init___impl(cursor* self, PyObject* source, bool readon
     self->offset = 0;
     if (self->buffer.buf != NULL)
         PyBuffer_Release(&self->buffer);
+    self->buffer.buf = NULL;
+    Py_XDECREF(self->source);
 
     /* Register the source object */
     self->source = source;
@@ -786,10 +788,11 @@ iocursor_cursor_Cursor___init___impl(cursor* self, PyObject* source, bool readon
         if (return_value < 0) {
             PyErr_Clear();
             readonly = true;
+            return_value = 0;
         }
     }
 
-    if (readonly) {
+    if (self->buffer.buf == NULL) {
         return_value = PyObject_GetBuffer(source, &self->buffer, PyBUF_SIMPLE);
         self->readonly = true;
     }
@@ -830,15 +833,12 @@ iocursor_cursor_Cursor___next__(cursor* self)
 // --------------------------------------------------------------------------
 
 static PyObject*
-iocursor_cursor_Cursor___repr___impl(PyObject* self)
+iocursor_cursor_Cursor___repr___impl(cursor* self)
 {
-    assert(Py_TYPE(self) == PyCursor_Type);
-
-    cursor* crs = (cursor*) self;
-    if (crs->readonly)
-        return PyUnicode_FromFormat("Cursor(\%R, readonly=True)", crs->source);
+    if (self->readonly && !self->buffer.readonly)
+        return PyUnicode_FromFormat("Cursor(\%R, readonly=True)", self->source);
     else
-        return PyUnicode_FromFormat("Cursor(\%R, readonly=False)", crs->source);
+        return PyUnicode_FromFormat("Cursor(\%R)", self->source);
 }
 
 // --------------------------------------------------------------------------
@@ -873,7 +873,6 @@ cursor_traverse(cursor* self, visitproc visit, void* arg)
 
 static struct PyMemberDef cursor_members[] = {
     {"closed",   T_BOOL, offsetof(cursor, closed),   READONLY, NULL},
-    {"readonly", T_BOOL, offsetof(cursor, readonly), READONLY, NULL},
     {NULL}  /* Sentinel */
 };
 
@@ -905,12 +904,12 @@ PyTypeObject PyCursor_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name      = "iocursor.cursor.Cursor",
     .tp_basicsize = sizeof(cursor),
-    .tp_dealloc   = (destructor)cursor_dealloc,
-    .tp_repr      = iocursor_cursor_Cursor___repr___impl,
+    .tp_dealloc   = (destructor) cursor_dealloc,
+    .tp_repr      = (reprfunc) iocursor_cursor_Cursor___repr___impl,
     .tp_flags     = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,
     .tp_doc       = iocursor_cursor_Cursor___init____doc__,
-    .tp_traverse  = (traverseproc)cursor_traverse,
-    .tp_clear     = (inquiry)cursor_clear,
+    .tp_traverse  = (traverseproc) cursor_traverse,
+    .tp_clear     = (inquiry) cursor_clear,
     .tp_iter      = PyObject_SelfIter,
     .tp_iternext  = (iternextfunc) iocursor_cursor_Cursor___next__,
     .tp_methods   = cursor_methods,

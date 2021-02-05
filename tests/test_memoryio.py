@@ -96,7 +96,7 @@ class MemoryTestMixin:
         self.assertRaises(TypeError, self.ioclass, "1234567890")
         self.assertRaises(TypeError, memio.write, "1234567890")
 
-        if not memio.readonly:
+        if memio.writable():
             self.assertRaises(TypeError, memio.writelines, ["1234567890"])
 
     def test_truncate(self):
@@ -314,7 +314,7 @@ class MemoryTestMixin:
        self.assertEqual(memio.tell(), 11)
        self.assertEqual(memio.getvalue(), buf)
 
-       if not memio.readonly:
+       if memio.writable():
            memio.write(self.EOF)
            self.assertEqual(memio.getvalue(), buf)
            # memio.write(buf)
@@ -412,7 +412,7 @@ class MemoryTestMixin:
         buf = self.buftype("abcd")
         cursor = self.ioclass(buf)
 
-        self.assertEqual(cursor.writable(), not cursor.readonly)
+        self.assertEqual(cursor.writable(), not memoryview(buf).readonly)
         self.assertEqual(cursor.readable(), True)
         self.assertEqual(cursor.seekable(), True)
         self.assertEqual(cursor.isatty(), False)
