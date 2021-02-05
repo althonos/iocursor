@@ -7,5 +7,5 @@ from .cursor import Cursor
 
 __version__ = "0.1.0"
 
-io.IOBase.register(Cursor)
-io.BufferedIOBase.register(Cursor)
+io.IOBase.register(Cursor)  # type: ignore
+io.BufferedIOBase.register(Cursor)  # type: ignore
