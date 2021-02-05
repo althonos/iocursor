@@ -23,10 +23,9 @@ inspired by Rust's [`std::io::Cursor`](https://doc.rust-lang.org/std/io/struct.C
 
 `iocursor.Cursor` lets you wrap an allocated buffer (i.e. a Python object
 implementing the [buffer protocol](https://docs.python.org/3/c-api/buffer.html)),
-and interacing with it through the API of a file-like object.
-
-`iocursor.Cursor` and `io.BytesIO` share some use-cases, but differ on the
-following points:
+and interfacing with it through the API of a file-like object. It shares
+some common points with [`io.BytesIO`](https://docs.python.org/3/library/io.html#io.BytesIO)
+but with the following main differences:
 
 - *zero-copy* VS *copy*: `Cursor` will not copy the data you give it at
   initialisation, while `BytesIO` will. This makes `Cursor` more efficient
@@ -61,9 +60,10 @@ Use a lock when interfacing otherwise.
   imgdata = base64.b64decode("iVBORw0KGgoAAAANSUhEU...")
   img = Image.open(Cursor(imgdata))
   ```
-- Use `iocursor.Cursor` when you want to use the file-like interface to write
-  to a buffer of known size. For instance, retrieve a file using the `pysmb` API,
-  which only accepts file-like objects:
+- Use `iocursor.Cursor` when you want to use the file-like API to write
+  to a buffer of known size. For instance, retrieve a file using the
+  [`pysmb`](https://miketeo.net/blog/projects/pysmb) API, which only accepts
+  file-like objects:
   ```python
   from SMB.SMBConnection import SMBConnectSMBConnection
 
@@ -77,7 +77,9 @@ Use a lock when interfacing otherwise.
   buffer = cursor.getvalue()
   ```
 - Use `iocursor.Cursor` when you want to do direct I/O on a type implementing
-  the buffer protocol. For instance, initialize an array by writing bytes to it:
+  the buffer protocol. For instance, initialize a [`numpy`](https://numpy.org/)
+  [array](https://numpy.org/doc/stable/reference/arrays.html) by writing bytes
+  to it:
   ```python
   import numpy
 
