@@ -67,7 +67,7 @@ class TestReadCursorMixin:
         cursor = Cursor(buffer, readonly=True)
         self.assertTrue(cursor.readonly)
         self.assertRaises(io.UnsupportedOperation, cursor.write, b"blah\n")
-        # self.assertRaises(io.UnsupportedOperation, cursor.writelines, [b"blah\n"])
+        self.assertRaises(io.UnsupportedOperation, cursor.writelines, [b"blah\n"])
 
     def test_getvalue(self):
         buffer = self.make_buffer(b"abc")
@@ -93,6 +93,7 @@ class TestWriteCursorMixin:
         self.assertEqual(cursor.write(b" world\n\n\n"), 9)
         self.assertEqual(cursor.seek(0), 0)
         self.assertEqual(cursor.write(b"h"), 1)
+        # NOTE: `truncate` is not supported
         # self.assertEqual(cursor.truncate(12), 12)
         self.assertEqual(cursor.tell(), 1)
 
