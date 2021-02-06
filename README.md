@@ -8,9 +8,9 @@ inspired by Rust's [`std::io::Cursor`](https://doc.rust-lang.org/std/io/struct.C
 [![Actions](https://img.shields.io/github/workflow/status/althonos/iocursor/Test/master?logo=github&style=flat-square&maxAge=300)](https://github.com/althonos/iocursor/actions)
 [![Coverage](https://img.shields.io/codecov/c/gh/althonos/iocursor?style=flat-square&maxAge=3600)](https://codecov.io/gh/althonos/iocursor/)
 [![PyPI](https://img.shields.io/pypi/v/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor)
-[![Python Implementations](https://img.shields.io/pypi/implementation/iocursor.svg?style=flat-square&maxAge=3600&label=impl)](https://pypi.org/project/iocursor/#files)
 [![Wheel](https://img.shields.io/pypi/wheel/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor/#files)
 [![Python Versions](https://img.shields.io/pypi/pyversions/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor/#files)
+[![Python Implementations](https://img.shields.io/pypi/implementation/iocursor.svg?style=flat-square&maxAge=3600&label=impl)](https://pypi.org/project/iocursor/#files)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square&maxAge=2678400)](https://choosealicense.com/licenses/mit/)
 [![Source](https://img.shields.io/badge/source-GitHub-303030.svg?maxAge=2678400&style=flat-square)](https://github.com/althonos/iocursor/)
 [![GitHub issues](https://img.shields.io/github/issues/althonos/iocursor.svg?style=flat-square&maxAge=600)](https://github.com/althonos/iocursor/issues)
@@ -36,9 +36,10 @@ but with the following main differences:
 
 ## 🔧 Installing
 
-For now, `iocursor` can be installed directly from the GitHub repository:
+Install directly from PyPI, using [pip](https://pip.pypa.io/):
+
 ```console
-$ pip install https://github.com/althonos/iocursor/archive/master.zip
+$ pip install iocursor
 ```
 
 
