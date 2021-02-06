@@ -1,0 +1,6 @@
+include COPYING
+include CHANGELOG.md
+include iocursor/cursor.c
+include iocursor/cursor.h
+include iocursor/py.typed
+include iocursor/cursor.pyi
