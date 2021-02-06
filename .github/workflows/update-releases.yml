@@ -19,6 +19,6 @@ jobs:
     - name: Install chandler gem
       run: gem install chandler
     - name: Update releases messages
-      run: chandler push --github="$GITHUB_REPOSITORY" --changelog="CHANGELOG.md"
+      run: chandler push --github=${{ github.repository }} --changelog="CHANGELOG.md"
       env:
         CHANDLER_GITHUB_API_TOKEN: ${{ secrets.CHANDLER_GITHUB_API_TOKEN }}
