@@ -7,16 +7,16 @@ inspired by Rust's [`std::io::Cursor`](https://doc.rust-lang.org/std/io/struct.C
 
 [![Actions](https://img.shields.io/github/workflow/status/althonos/iocursor/Test/master?logo=github&style=flat-square&maxAge=300)](https://github.com/althonos/iocursor/actions)
 [![Coverage](https://img.shields.io/codecov/c/gh/althonos/iocursor?style=flat-square&maxAge=3600)](https://codecov.io/gh/althonos/iocursor/)
+[![PyPI](https://img.shields.io/pypi/v/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor)
+[![Python Implementations](https://img.shields.io/pypi/implementation/iocursor.svg?style=flat-square&maxAge=3600&label=impl)](https://pypi.org/project/iocursor/#files)
+[![Wheel](https://img.shields.io/pypi/wheel/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor/#files)
+[![Python Versions](https://img.shields.io/pypi/pyversions/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor/#files)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square&maxAge=2678400)](https://choosealicense.com/licenses/mit/)
 [![Source](https://img.shields.io/badge/source-GitHub-303030.svg?maxAge=2678400&style=flat-square)](https://github.com/althonos/iocursor/)
 [![GitHub issues](https://img.shields.io/github/issues/althonos/iocursor.svg?style=flat-square&maxAge=600)](https://github.com/althonos/iocursor/issues)
+[![Downloads](https://img.shields.io/badge/dynamic/json?style=flat-square&color=303f9f&maxAge=86400&label=downloads&query=%24.total_downloads&url=https%3A%2F%2Fapi.pepy.tech%2Fapi%2Fprojects%2Fiocursor)](https://pepy.tech/project/iocursor)
 [![Changelog](https://img.shields.io/badge/keep%20a-changelog-8A0707.svg?maxAge=2678400&style=flat-square)](https://github.com/althonos/iocursor/blob/master/CHANGELOG.md)
 
-<!-- [![PyPI](https://img.shields.io/pypi/v/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor) -->
-<!-- [![Wheel](https://img.shields.io/pypi/wheel/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor/#files) -->
-<!-- [![Python Versions](https://img.shields.io/pypi/pyversions/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor/#files) -->
-<!-- [![Python Implementations](https://img.shields.io/pypi/implementation/iocursor.svg?style=flat-square&maxAge=3600&label=impl)](https://pypi.org/project/iocursor/#files) -->
-<!-- [![Downloads](https://img.shields.io/badge/dynamic/json?style=flat-square&color=303f9f&maxAge=86400&label=downloads&query=%24.total_downloads&url=https%3A%2F%2Fapi.pepy.tech%2Fapi%2Fprojects%2Fiocursor)](https://pepy.tech/project/iocursor) -->
 
 
 ## 🗺️ Overview
@@ -41,11 +41,13 @@ For now, `iocursor` can be installed directly from the GitHub repository:
 $ pip install https://github.com/althonos/iocursor/archive/master.zip
 ```
 
+
 ## 🧶 Thread-safety
 
 `iocursor.Cursor` instances are not thread-safe. Using several `Cursor`
 instances with the same backend memory only for reading should be fine.
 Use a lock when interfacing otherwise.
+
 
 ## 💡 Examples
 
@@ -88,6 +90,7 @@ Use a lock when interfacing otherwise.
   cursor.write(b"\x01\x00\x02\x00\x03\x00\x04\x00")
   print(array)  # array([1, 2, 3, 4], dtype=int16)
   ```
+
 
 ## 💭 Feedback
 
