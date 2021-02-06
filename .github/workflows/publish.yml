@@ -17,6 +17,7 @@ jobs:
       uses: RalfG/python-wheels-manylinux-build@v0.3.3
       with:
         build-requirements: 'setuptools'
+        python-versions: 'cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39'
     - name: Store built wheels
       uses: actions/upload-artifact@v2
       with:
