@@ -10,6 +10,7 @@ from .cursor import Cursor
 __author__ = "Martin Larralde <martin.larralde@embl.de>"
 __version__ = "0.1.0"
 __license__ = "MIT"
+__all__ = ["Cursor"]
 
 io.IOBase.register(Cursor)  # type: ignore
 io.BufferedIOBase.register(Cursor)  # type: ignore

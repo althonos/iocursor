@@ -73,7 +73,10 @@ PyDoc_STRVAR(
   "close(self)\n"
   "--\n"
   "\n"
-  ""
+  "Disable all I/O operations.\n"
+  "\n"
+  "This method will effectively release the view on the buffer memory\n"
+  "wrapped by the cursor.\n"
 );
 
 static PyObject*
@@ -93,7 +96,11 @@ PyDoc_STRVAR(
   "detach(self)\n"
   "--\n"
   "\n"
-  ""
+  "Disconnect the wrapper from its underlying raw stream.\n"
+  "\n"
+  "This is not supported by `Cursor` instances, since they do not wrap\n"
+  "a raw stream, and calling this method will effectively raise the\n"
+  "`io.UnsupportedOperation` exception.\n"
 );
 
 static PyObject*
@@ -112,7 +119,11 @@ PyDoc_STRVAR(
   "fileno(self)\n"
   "--\n"
   "\n"
-  ""
+  "Return the underlying file descriptor if one exists.\n"
+  "\n"
+  "This is not supported by `Cursor` instances, since they do not wrap\n"
+  "a file descriptor, and calling this method will effectively raise\n"
+  "the `io.UnsupportedOperation` exception.\n"
 );
 
 static PyObject*
@@ -131,7 +142,10 @@ PyDoc_STRVAR(
   "flush(self)\n"
   "--\n"
   "\n"
-  ""
+  "Flush write buffers, if applicable.\n"
+  "\n"
+  "This is a no-op for `Cursor`, since they write directly to the\n"
+  "provided buffer.\n"
 );
 
 static PyObject*
@@ -149,7 +163,15 @@ PyDoc_STRVAR(
   "getvalue(self)\n"
   "--\n"
   "\n"
-  ""
+  "Retrieve the backing memory buffer of the `Cursor` object.\n"
+  "\n"
+  "Example:\n"
+  "    >>> cursor = Cursor(bytearray(4))\n"
+  "    >>> cursor.write(b'abc')\n"
+  "    3\n"
+  "    >>> cursor.getvalue()\n"
+  "    bytearray(b'abc\\x00')\n"
+  "\n"
 );
 
 static PyObject*
@@ -170,7 +192,7 @@ PyDoc_STRVAR(
   "\n"
   "Return whether the stream is attached to a TTY device.\n"
   "\n"
-  "On `iocursor.Cursor` instances, always return `False`.\n"
+  "On `Cursor` instances, always return `False`.\n"
 );
 
 static PyObject*
@@ -188,7 +210,29 @@ PyDoc_STRVAR(
   "read(self, size=-1)\n"
   "--\n"
   "\n"
-  ""
+  "Read at most ``size`` bytes, returned as a `bytes` object.\n"
+  "\n"
+  "An empty `bytes` object is returned at EOF.\n"
+  "\n"
+  "Arguments:\n"
+  "    size (int, *optional*): The number of bytes to read. If\n"
+  "        negative or `None`, read until EOF is reached.\n"
+  "\n"
+);
+
+PyDoc_STRVAR(
+  iocursor_cursor_Cursor_read1___doc__,
+  "read1(self, size=-1)\n"
+  "--\n"
+  "\n"
+  "Read at most ``size`` bytes with a single syscall.\n"
+  "\n"
+  "An empty `bytes` object is returned at EOF.\n"
+  "\n"
+  "Arguments:\n"
+  "    size (int, *optional*): The number of bytes to read. If\n"
+  "        negative or `None`, read until EOF is reached.\n"
+  "\n"
 );
 
 static inline PyObject*
@@ -235,7 +279,10 @@ PyDoc_STRVAR(
   "readable(self)\n"
   "--\n"
   "\n"
-  "Return ``True`` if the stream can be read from."
+  "Return ``True`` if the stream can be read from.\n"
+  "\n"
+  "On `Cursor` instances, this always returns `True`, since the\n"
+  "buffers cannot be opened in write-only mode.\n"
 );
 
 static PyObject*
@@ -253,7 +300,23 @@ PyDoc_STRVAR(
   "readinto(self, buffer)\n"
   "--\n"
   "\n"
-  ""
+  "Read bytes into the provided buffer.\n"
+  "\n"
+  "Returns:\n"
+  "    int: The number of bytes read, or 0 if the cursor is at EOF.\n"
+  "\n"
+);
+
+PyDoc_STRVAR(
+  iocursor_cursor_Cursor_readinto1___doc__,
+  "readinto1(self, buffer)\n"
+  "--\n"
+  "\n"
+  "Read bytes into the provided buffer with a single syscall.\n"
+  "\n"
+  "Returns:\n"
+  "    int: The number of bytes read, or 0 if the cursor is at EOF.\n"
+  "\n"
 );
 
 static inline PyObject*
@@ -300,6 +363,7 @@ PyDoc_STRVAR(
   "--\n"
   "\n"
   "Return the next line from the file, as a bytes object.\n"
+  "\n"
 );
 
 static inline PyObject*
@@ -347,7 +411,21 @@ PyDoc_STRVAR(
   "readlines(self, hint=-1)\n"
   "--\n"
   "\n"
-  "Return the next line from the file, as a bytes object.\n"
+  "Collect all lines from the file into a `list` of `bytes`.\n"
+  "\n"
+  "Arguments:\n"
+  "    hint (int, *optional*): An approximate bound on the total\n"
+  "        number of bytes to be read. When positive, `readlines` will\n"
+  "        stop reading lines when the total number of bytes read\n"
+  "        exceeds ``hint``.\n"
+  "\n"
+  "Example:\n"
+  "    >>> text = b'abc\\ndef\\nghi\\n'\n"
+  "    >>> Cursor(text).readlines()\n"
+  "    [b'abc\n', b'def\n', b'ghi\n']\n"
+  "    >>> Cursor(text).readlines(5)\n"
+  "    [b'abc\n', b'def\n']\n"
+  "\n"
 );
 
 static inline PyObject*
@@ -388,22 +466,6 @@ iocursor_cursor_Cursor_readlines_impl(cursor* self, Py_ssize_t hint) {
         total += length;
     }
 
-
-
-    // if ((size < 0) || (size >= self->buffer.len - self->offset))
-    //     size = (self->offset > self->buffer.len) ? 0 : self->buffer.len - self->offset;
-    // if (size == 0)
-    //     return PyBytes_FromStringAndSize(NULL, 0);
-    //
-    // void* start = (void*) &((char*) self->buffer.buf)[self->offset];
-    // void* end   = memchr(start, '\n', size);
-    //
-    // Py_ssize_t length = (end == NULL) ? size : end - start + 1;
-    // PyObject* bytes = PyBytes_FromStringAndSize((char*) start, length);
-    // if (bytes == NULL)
-    //     return PyErr_NoMemory();
-    //
-    // self->offset += length;
     return lines;
 }
 
@@ -431,7 +493,16 @@ PyDoc_STRVAR(
   "seek(self, pos, whence=0)\n"
   "--\n"
   "\n"
-  ""
+  "Change the stream position.\n"
+  "\n"
+  "Seek to byte offset pos relative to position indicated by whence:\n"
+  "    - 0  Start of stream (the default) - pos should be >= 0.\n"
+  "    - 1  Current position - pos may be negative.\n"
+  "    - 2  End of stream - pos usually negative.\n"
+  "\n"
+  "Returns\n"
+  "    int: The new absolute position.\n"
+  "\n"
 );
 
 static inline PyObject*
@@ -509,7 +580,10 @@ PyDoc_STRVAR(
   "seekable(self)\n"
   "--\n"
   "\n"
-  "Return ``True`` if the stream supports random access."
+  "Return `True` if the stream supports random access.\n"
+  "\n"
+  "Always `True` for `Cursor` instances.\n"
+  "\n"
 );
 
 static PyObject*
@@ -526,8 +600,8 @@ PyDoc_STRVAR(
   iocursor_cursor_Cursor_tell___doc__,
   "tell(self)\n"
   "--\n"
+  "Get the current file position as an integer.\n"
   "\n"
-  ""
 );
 
 static PyObject*
@@ -545,7 +619,12 @@ PyDoc_STRVAR(
   "truncate(self, size=None, /)\n"
   "--\n"
   "\n"
-  ""
+  "Truncate the file to at most size bytes.\n"
+  "\n"
+  "This is not supported by `Cursor` instances, and calling this\n"
+  "method will effectively raise the `io.UnsupportedOperation`\n"
+  "exception.\n"
+  "\n"
 );
 
 static PyObject*
@@ -602,8 +681,11 @@ PyDoc_STRVAR(
   iocursor_cursor_Cursor_write___doc__,
   "write(self, b, /)\n"
   "--\n"
+  "Write the given bytes to the buffer.\n"
   "\n"
-  ""
+  "Returns:\n"
+  "    int: The number of bytes written.\n"
+  "\n"
 );
 
 static inline PyObject*
@@ -661,7 +743,8 @@ PyDoc_STRVAR(
   "writelines(self, lines, /)\n"
   "--\n"
   "\n"
-  ""
+  "Write a list of lines to the buffer.\n"
+  "\n"
 );
 
 static inline PyObject*
@@ -755,10 +838,9 @@ iocursor_cursor_Cursor___new__(PyTypeObject* type, PyObject* args, PyObject* kwd
 
 PyDoc_STRVAR(
   iocursor_cursor_Cursor___init____doc__,
-  "Cursor(buffer, mode=\"\")\n"
-  "--\n"
   "\n"
-  "Buffered I/O implementation using an in-memory bytes buffer."
+  "A buffered I/O implementation wrapping a bytes buffer."
+  "\n"
 );
 
 static inline int
@@ -841,7 +923,7 @@ iocursor_cursor_Cursor___enter___impl(cursor* self)
 
 PyDoc_STRVAR(
   iocursor_cursor_Cursor___exit_____doc__,
-  "__enter__(self)\n"
+  "__exit__(self, exc_type, exc_value, traceback)\n"
   "--\n"
   "\n"
   ""
@@ -944,10 +1026,10 @@ static struct PyMethodDef cursor_methods[] = {
     {"getvalue",   (PyCFunction)                          iocursor_cursor_Cursor_getvalue_impl,  METH_NOARGS,                  iocursor_cursor_Cursor_getvalue___doc__},
     {"isatty",     (PyCFunction)                          iocursor_cursor_Cursor_isatty_impl,    METH_NOARGS,                  iocursor_cursor_Cursor_isatty___doc__},
     {"read",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,           METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
-    {"read1",      (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,           METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read___doc__},
+    {"read1",      (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_read,           METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_read1___doc__},
     {"readable",   (PyCFunction)                          iocursor_cursor_Cursor_readable_impl,  METH_NOARGS,                  iocursor_cursor_Cursor_readable___doc__},
     {"readinto",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readinto,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readinto___doc__},
-    {"readinto1",  (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readinto,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readinto___doc__},
+    {"readinto1",  (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readinto,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readinto1___doc__},
     {"readline",   (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readline,       METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readline___doc__},
     {"readlines",  (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_readlines,      METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_readlines___doc__},
     {"seek",       (PyCFunction)(PyCFunctionWithKeywords) iocursor_cursor_Cursor_seek,           METH_VARARGS | METH_KEYWORDS, iocursor_cursor_Cursor_seek___doc__},
