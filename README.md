@@ -42,6 +42,9 @@ Install directly from PyPI, using [pip](https://pip.pypa.io/):
 $ pip install iocursor
 ```
 
+Pre-built wheels are available on Linux and OSX for all supported Python3
+versions. Otherwise, building from source only requires a working C compiler.
+
 
 ## 🧶 Thread-safety
 
@@ -102,6 +105,10 @@ tracker](https://github.com/althonos/iocursor/issues) if you need to report
 or ask something. If you are filing in on a bug, please include as much
 information as you can about the issue, and try to recreate the same bug
 in a simple, easily reproducible situation.
+
+### 🏗️ Contributing
+
+Contributions are more than welcome! See [`CONTRIBUTING.md`](https://github.com/althonos/iocursor/blob/master/CONTRIBUTING.md) for more details.
 
 ## ⚖️ License
 

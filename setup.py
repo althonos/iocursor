@@ -3,6 +3,7 @@
 
 
 import configparser
+import glob
 import os
 import sys
 
@@ -72,17 +73,14 @@ class build_ext(_build_ext):
 
 class clean(_clean):
 
+    def info(self, message):
+        self.announce(message, level=2)
+
     def run(self):
-
-        source_dir = os.path.join(os.path.dirname(__file__), "pyhmmer")
-
-        patterns = ["*.html"]
+        source_dir = os.path.join(os.path.dirname(__file__), "iocursor")
         if self.all:
-            patterns.extend(["*.so", "*.c"])
-
-        for pattern in patterns:
-            for file in glob.glob(os.path.join(source_dir, pattern)):
-                log.info("removing {!r}".format(file))
+            for file in glob.glob(os.path.join(source_dir, "*.so")):
+                self.info("removing {!r}".format(file))
                 os.remove(file)
 
         _clean.run(self)

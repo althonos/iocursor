@@ -1,5 +1,6 @@
 include COPYING
 include CHANGELOG.md
+include CONTRIBUTING.md
 include iocursor/cursor.c
 include iocursor/cursor.h
 include iocursor/py.typed
