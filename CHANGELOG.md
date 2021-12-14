@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/althonos/iocursor/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/althonos/iocursor/compare/v0.1.2...HEAD
+
+
+## [v0.1.2] - 2021-12-14
+
+[v0.1.2]: https://github.com/althonos/iocursor/compare/v0.1.1...v0.1.2
+
+### Added
+- Wheels for Python 3.10.
+
+### Fixed
+- Broken docstrings for `Cursor.write`, `Cursor.tell` and `Cursor.readlines`.
 
 
 ## [v0.1.1] - 2021-02-10
