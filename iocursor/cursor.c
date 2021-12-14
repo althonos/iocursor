@@ -422,9 +422,9 @@ PyDoc_STRVAR(
   "Example:\n"
   "    >>> text = b'abc\\ndef\\nghi\\n'\n"
   "    >>> Cursor(text).readlines()\n"
-  "    [b'abc\n', b'def\n', b'ghi\n']\n"
+  "    [b'abc\\n', b'def\\n', b'ghi\\n']\n"
   "    >>> Cursor(text).readlines(5)\n"
-  "    [b'abc\n', b'def\n']\n"
+  "    [b'abc\\n', b'def\\n']\n"
   "\n"
 );
 
@@ -600,6 +600,7 @@ PyDoc_STRVAR(
   iocursor_cursor_Cursor_tell___doc__,
   "tell(self)\n"
   "--\n"
+  "\n"
   "Get the current file position as an integer.\n"
   "\n"
 );
@@ -681,6 +682,7 @@ PyDoc_STRVAR(
   iocursor_cursor_Cursor_write___doc__,
   "write(self, b, /)\n"
   "--\n"
+  "\n"
   "Write the given bytes to the buffer.\n"
   "\n"
   "Returns:\n"
