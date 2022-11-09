@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/althonos/iocursor/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/althonos/iocursor/compare/v0.1.4...HEAD
+
+
+## [v0.1.4] - 2022-11-09
+
+[v0.1.4]: https://github.com/althonos/iocursor/compare/v0.1.3...v0.1.4
+
+### Added
+- Wheels for Windows platform.
 
 
 ## [v0.1.3] - 2022-11-09
@@ -18,7 +26,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Wheels for Python 3.11.
 
 ### Fixed
-- `void*` pointers preventing build on Windows.
+- `void*` pointers preventing build on Windows ([#1](https://github.com/althonos/iocursor/issues/1)).
+- Missing terminator in `Cursor.__exit__` keyword argument list causing issues on Windows.
 
 
 
