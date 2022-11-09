@@ -258,7 +258,7 @@ iocursor_cursor_Cursor_read_impl(cursor* self, Py_ssize_t size)
 static PyObject*
 iocursor_cursor_Cursor_read(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    assert(Py_TYPE(self) == PyCursor_Type);
+    assert(Py_TYPE(self) == &PyCursor_Type);
 
     PyObject *return_value = NULL;
     cursor* crs            = (cursor*) self;
@@ -340,7 +340,7 @@ iocursor_cursor_Cursor_readinto_impl(cursor* self, Py_buffer* buffer)
 static PyObject*
 iocursor_cursor_Cursor_readinto(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    assert(Py_TYPE(self) == PyCursor_Type);
+    assert(Py_TYPE(self) == &PyCursor_Type);
 
     Py_buffer buffer;
     PyObject* return_value = NULL;
@@ -390,7 +390,7 @@ iocursor_cursor_Cursor_readline_impl(cursor* self, Py_ssize_t size) {
 
 static PyObject*
 iocursor_cursor_Cursor_readline(PyObject* self, PyObject *args, PyObject *kwargs) {
-    assert(Py_TYPE(self) == PyCursor_Type);
+    assert(Py_TYPE(self) == &PyCursor_Type);
 
     PyObject* return_value = NULL;
     cursor* crs            = (cursor*) self;
@@ -471,7 +471,7 @@ iocursor_cursor_Cursor_readlines_impl(cursor* self, Py_ssize_t hint) {
 
 static PyObject*
 iocursor_cursor_Cursor_readlines(PyObject* self, PyObject *args, PyObject *kwargs) {
-    assert(Py_TYPE(self) == PyCursor_Type);
+    assert(Py_TYPE(self) == &PyCursor_Type);
 
     PyObject* return_value = NULL;
     cursor* crs            = (cursor*) self;
@@ -558,7 +558,7 @@ iocursor_cursor_Cursor_seek_impl(cursor* self, Py_ssize_t pos, int whence)
 static PyObject*
 iocursor_cursor_Cursor_seek(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    assert(Py_TYPE(self) == PyCursor_Type);
+    assert(Py_TYPE(self) == &PyCursor_Type);
 
     PyObject* return_value = NULL;
     cursor* crs            = (cursor*) self;
@@ -644,7 +644,7 @@ iocursor_cursor_Cursor_truncate_impl(cursor* self, Py_ssize_t size)
 static PyObject*
 iocursor_cursor_Cursor_truncate(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    assert(Py_TYPE(self) == PyCursor_Type);
+    assert(Py_TYPE(self) == &PyCursor_Type);
 
     PyObject*  return_value   = NULL;
     cursor*    crs            = (cursor*) self;
@@ -723,7 +723,7 @@ iocursor_cursor_Cursor_write_impl(cursor* self, Py_buffer* bytes)
 static PyObject*
 iocursor_cursor_Cursor_write(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    assert(Py_TYPE(self) == PyCursor_Type);
+    assert(Py_TYPE(self) == &PyCursor_Type);
 
     Py_buffer bytes;
     PyObject *return_value = NULL;
@@ -800,7 +800,7 @@ iocursor_cursor_Cursor_writelines_impl(cursor* self, PyObject* it)
 static PyObject*
 iocursor_cursor_Cursor_writelines(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    assert(Py_TYPE(self) == PyCursor_Type);
+    assert(Py_TYPE(self) == &PyCursor_Type);
 
     PyObject* it;
     PyObject* return_value = NULL;

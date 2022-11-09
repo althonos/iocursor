@@ -15,6 +15,8 @@ typedef struct {
     PyObject *unsupported_operation;
 } PyCursor_State;
 
+PyTypeObject PyCursor_Type;
+
 static PyCursor_State* PyCursor_getstate(void);
 static PyObject* PyCursor_getunsupportedoperation(void);
 
