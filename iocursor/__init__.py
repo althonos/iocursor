@@ -8,7 +8,7 @@ import os
 from .cursor import Cursor
 
 __author__ = "Martin Larralde <martin.larralde@embl.de>"
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 __license__ = "MIT"
 __all__ = ["Cursor"]
 
