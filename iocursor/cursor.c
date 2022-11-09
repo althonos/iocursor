@@ -944,7 +944,7 @@ iocursor_cursor_Cursor___exit__(PyObject *self, PyObject *args, PyObject *kwargs
 {
 
     PyObject*    return_value = NULL;
-    static char* keywords[]   = {"exc_type", "exc_value", "traceback"};
+    static char* keywords[]   = {"exc_type", "exc_value", "traceback", NULL};
 
     PyObject* exc_type  = Py_None;
     PyObject* exc_value = Py_None;
@@ -1013,8 +1013,14 @@ cursor_traverse(cursor* self, visitproc visit, void* arg)
 
 // --------------------------------------------------------------------------
 
+PyDoc_STRVAR(
+  iocursor_cursor_Cursor_closed___doc__,
+  "closed: `True` if the stream has been closed.\n"
+  "\n"
+);
+
 static struct PyMemberDef cursor_members[] = {
-    {"closed",   T_BOOL, offsetof(cursor, closed),   READONLY, NULL},
+    {"closed",   T_BOOL, offsetof(cursor, closed), READONLY, iocursor_cursor_Cursor_closed___doc__},
     {NULL}  /* Sentinel */
 };
 

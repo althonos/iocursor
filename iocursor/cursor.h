@@ -1,6 +1,9 @@
 #ifndef _CURSOR_H
 #define _CURSOR_H
 
+#include <stdbool.h>
+#include <Python.h>
+
 typedef struct {
     PyObject_HEAD
     bool        closed;
