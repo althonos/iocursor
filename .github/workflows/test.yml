@@ -173,9 +173,3 @@ jobs:
       run: python setup.py build_ext --inplace --coverage
     - name: Test without coverage
       run: python -m unittest discover -vv
-    - uses: codecov/codecov-action@v1
-      with:
-        flags: ${{ matrix.python-impl }},${{ matrix.python-release }},${{ env.OS }}
-        name: test-python-${{ matrix.python-version }}
-        fail_ci_if_error: true
-        token: ${{ secrets.CODECOV_TOKEN }}
