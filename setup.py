@@ -62,8 +62,8 @@ class build_ext(_build_ext):
         if self.coverage:
             self.info("adding C flags to compile with coverage support")
             if self.compiler.compiler_type in {"unix", "cygwin", "mingw32"}:
-                ext.extra_compile_args.append("--coverage")
-                ext.extra_link_args.append("--coverage")
+                ext.extra_compile_args.append("-coverage")
+                ext.extra_link_args.append("-coverage")
             else:
                 self.warn("unknown C compiler, cannot add coverage flags")
 
