@@ -52,7 +52,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Update pip
-      run: python -m pip install -U pip wheel setuptools
+      run: python -m pip install -U pip wheel setuptools coverage
     - name: Build C extension
       run: python setup.py build_ext --inplace --coverage --debug
     - name: Test with coverage
@@ -110,7 +110,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Update pip
-      run: python -m pip install -U pip wheel setuptools
+      run: python -m pip install -U pip wheel setuptools coverage
     - name: Build C extension
       run: python setup.py build_ext --inplace --coverage --debug
     - name: Test with coverage
@@ -168,7 +168,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Update pip
-      run: python -m pip install -U pip wheel setuptools
+      run: python -m pip install -U pip wheel setuptools coverage
     - name: Build C extension
       run: python setup.py build_ext --inplace --coverage
     - name: Test without coverage
