@@ -90,7 +90,7 @@ jobs:
     - name: Store built wheels
       uses: actions/upload-artifact@v2
       with:
-        name: dist
+        name: wheels
         path: dist/*
 
   upload:
