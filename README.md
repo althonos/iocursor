@@ -5,7 +5,7 @@
 for [Python](https://www.python.org/) [byte buffers](https://docs.python.org/3/c-api/buffer.html),
 inspired by Rust's [`std::io::Cursor`](https://doc.rust-lang.org/std/io/struct.Cursor.html).*
 
-[![Actions](https://img.shields.io/github/workflow/status/althonos/iocursor/Test/master?logo=github&style=flat-square&maxAge=300)](https://github.com/althonos/iocursor/actions)
+[![Actions](https://img.shields.io/github/actions/workflow/status/althonos/iocursor/test.yml?branch=master&logo=github&style=flat-square&maxAge=300)](https://github.com/althonos/iocursor/actions)
 [![Coverage](https://img.shields.io/codecov/c/gh/althonos/iocursor?style=flat-square&maxAge=3600)](https://codecov.io/gh/althonos/iocursor/)
 [![PyPI](https://img.shields.io/pypi/v/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor)
 [![Wheel](https://img.shields.io/pypi/wheel/iocursor.svg?style=flat-square&maxAge=3600)](https://pypi.org/project/iocursor/#files)
